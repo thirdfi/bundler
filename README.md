@@ -15,7 +15,7 @@ TODO: flow chart + explanation on flow chart
 
 1. Run `yarn && yarn preprocess`
 
-2. Change parameters in ./packages/bundler/localconfig/bundler.config.json
+2. Change parameters in `./packages/bundler/localconfig/bundler.config.json`
 
   - `network`: RPC to connect i.e. Arbitrum RPC
 
@@ -25,9 +25,9 @@ TODO: flow chart + explanation on flow chart
 
   - `mnemonic`: mnemonic of bundler signer to execute AA transaction
 
-  - `minStake`: minimum stake in Paymaster
+  - `minStake`: Paymaster minimum stake in EntryPoint
 
-  - `minUnstakeDelay`: minimum time stake locked in EntryPoint required before able to unstake
+  - `minUnstakeDelay`: minimum time Paymaster stake locked in EntryPoint before able to unstake in seconds, Paymaster will be rejected if lower than this value
 
 3. Fund bundler signer at least `minBalance` ETH
 
