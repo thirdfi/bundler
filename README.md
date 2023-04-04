@@ -1,61 +1,39 @@
-# EIP4337 reference modules
-
-## Bundler
-
-A basic eip4337 "bundler"
-
-This is a reference implementation for a bundler, implementing the full EIP-4337
-RPC calls (both production and debug calls), required to pass the [bundler-spec-tests](https://github.com/eth-infinitism/bundler-spec-tests) test suite.
-
-### Running local node
-In order to implement the full spec storage access rules and opcode banning, it must run
-against a GETH node, which supports debug_traceCall with javascript "tracer"
-Specifically, `hardhat node` and `ganache` do NOT support this API.
-You can still run the bundler with such nodes, but with `--unsafe` so it would skip these security checks
-
-If you don't have geth installed locally, you can use docker to run it:
-```
-docker run --rm -ti --name geth -p 8545:8545 ethereum/client-go:v1.10.26 \
-  --miner.gaslimit 12000000 \
-  --http --http.api personal,eth,net,web3,debug \
-  --http.vhosts '*,localhost,host.docker.internal' --http.addr "0.0.0.0" \
-  --ignore-legacy-receipts --allow-insecure-unlock --rpc.allow-unprotected-txs \
-  --dev \
-  --verbosity 2 \
-  --nodiscover --maxpeers 0 --mine --miner.threads 1 \
-  --networkid 1337
-```
-
-### Usage: 
-1. run `yarn && yarn preprocess`
-2. deploy contracts with `yarn hardhat-deploy --network localhost`
-3. run `yarn run bundler`
-    (or `yarn run bundler --unsafe`, if working with "hardhat node")
-
-Now your bundler is active on local url http://localhost:3000/rpc    
-
-To run a simple test, do `yarn run runop --deployFactory --network http://localhost:8545/ --entryPoint 0x0576a174d229e3cfa37253523e645a78a0c91b57`
-
-   The runop script:
-   - deploys a wallet deployer (if not already there)
-   - creates a random signer (owner for wallet)
-   - determines the wallet address, and funds it
-   - sends a transaction (which also creates the wallet)
-   - sends another transaction, on this existing wallet
-   - (uses account[0] or mnemonic file for funding, and creating deployer if needed)
+# Bundler
 
 
-NOTE: if running on a testnet, you need to supply the bundler (and runop) the network and mnemonic file, e.g.
+## Introduction
 
-`yarn run bundler --network localhost --mnemonic file.txt` 
+TODO: introduction of bundler, with some article reference
 
-To run the full test bundler spec test suite, visit https://github.com/eth-infinitism/bundler-spec-tests
 
-## sdk
+## Flow
 
-SDK to create and send UserOperations
-see [SDK Readme](./packages/sdk/README.md)
+TODO: flow chart + explanation on flow chart
 
-## utils
 
-internal utility methods/test contracts, used by other packages.
+## Usage:
+
+1. Run `yarn && yarn preprocess`
+
+2. Change parameters in ./packages/bundler/localconfig/bundler.config.json
+
+  - `network`: RPC to connect i.e. Arbitrum RPC
+
+  - `beneficiary`: wallet to receive gas reimbursement
+
+  - `minBalance`: minimum balance in bundler signer, if lower than this value, beneficiary will auto assign to bundler signer
+
+  - `mnemonic`: mnemonic of bundler signer to execute AA transaction
+
+  - `minStake`: minimum stake in Paymaster
+
+  - `minUnstakeDelay`: minimum time stake locked in EntryPoint required before able to unstake
+
+3. Fund bundler signer at least `minBalance` ETH
+
+4. Run bundler with `yarn run bundler`, or `yarn run bundler --unsafe` if connect to RPC that doesn't support Geth trace call `debug_traceCall`. (i.e. Alchemy free RPC)
+
+
+## Other technical details
+
+TODO: everything else here
