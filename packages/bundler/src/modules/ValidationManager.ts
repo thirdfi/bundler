@@ -203,6 +203,10 @@ export class ValidationManager {
       'expires too soon',
       ValidationErrors.ExpiresShortly)
 
+    if (res.paymasterInfo != null) {
+      this.reputationManager.checkStake('paymaster', res.paymasterInfo)
+    }
+
     if (res.aggregatorInfo != null) {
       this.reputationManager.checkStake('aggregator', res.aggregatorInfo)
     }
