@@ -3,7 +3,7 @@
 
 ## Introduction
 
-Bundler is a special class of actor that act as a relayer between account abstraction transaction (called `userOperation`) and actual transaction on-chain through EntryPoint contract. Bundler implement full EIP-4337 RPC calls by, fetch `userOperation` from alternate mempool, do validation and simulation before send it to EntryPoint contract, and return any response back through RPC.
+Bundler is a special class of actor that act as a relayer between account abstraction transaction (called `userOperation`) and actual transaction on-chain through EntryPoint contract. Bundler fetch `userOperation` from alternate mempool, do validation and simulation before send it to EntryPoint contract, and return any response back through RPC. This bundler implement EIP-4337 RPC calls without `debug_*` calls.
 
 Further read:
 
@@ -18,7 +18,7 @@ https://hackmd.io/@Vid201/aa-bundler-rust#ERC-4337-Account-Abstraction---Bundler
 
 ### RPC
 
-Bundler receive methods from endpoint and return any result.
+Bundler receive RPC methods from endpoint and return any result. The methods including:
 
   - `eth_sendUserOperation`
 
@@ -32,9 +32,9 @@ Bundler receive methods from endpoint and return any result.
 
   - `eth_estimateUserOperationGas`
 
-  - `web3_clientVersion`: return `/erc4337RuntimeVersion` (version of `@account-abstraction/utils` SDK) and `/unsafe` if bundler run with unsafe mode
+  - `web3_clientVersion`: return `aa-bundler` + `/erc4337RuntimeVersion` (version of `@account-abstraction/utils` SDK) + `/unsafe` if bundler run with unsafe mode
 
-For parameters required and return value, refer [EIP4337 article](https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-eth-namespace).
+For parameter required and return value, refer [EIP4337 article](https://eips.ethereum.org/EIPS/eip-4337#rpc-methods-eth-namespace).
 
 ### Validation
 
@@ -48,35 +48,33 @@ For parameters required and return value, refer [EIP4337 article](https://eips.e
 
   - check if paymaster staked
 
-  - (TODO: other check)
+  - *(TODO: other checks)*
 
-- validate if the signature is correct
+- validate if signature is correct
 
 - validate if `userOperation` is expired / going to expire soon
 
-- add into mempool after all validation passed
+Add into mempool after all validation passed
 
 ### Auto-bundler
 
-Auto-bundler create bundle for all `userOperation` from mempool every `autoBundleInterval` seconds set in `bundler.config.json`
+Auto-bundler create bundle for at most `autoBundleMempoolSize` amount of `userOperation` from mempool every `autoBundleInterval` seconds set in `bundler.config.json`
 
-## Create bundle
+### Create bundle
 
-- sort `userOperation`s from mempool by highest priority fee
+- sort `userOperation`s from mempool descending by highest priority fee
 
 - skip (or remove if banned) `userOperation`s that use throttled factory/paymaster
 
-- skip `userOperation`s that execute by same AA account (no duplicate AA account execution in one bundle, multiple execution within same AA account use batch execution in single `userOperation`)
+- skip `userOperation`s that execute by same AA account (no duplicate AA account execution in one bundle, multiple execution within same AA account can use batch execution in single `userOperation`)
 
-- do validation check again (in case `userOperation` been skipped in first attempt bundle), and remove from mempool if failed
+- do validation check for `userOperation` again (in case `userOperation` been skipped in first attempt bundle), and remove from mempool if failed
 
-- check if Paymaster balance is enough to pay all `userOperation`s in the bundle
+- check if Paymaster balance is enough to pay all `userOperation`s that rely on Paymaster in the bundle
 
-## Send bundle
+### Send bundle
 
-- bundler signer sign and send bundle to EntryPoint
-
-- if bundle failed on-chain, sender/paymaster/factory that cause it will be recorded in reputation system
+Bundler signer sign and send bundle to EntryPoint. If bundle failed on-chain, sender/paymaster/factory that cause it will be recorded in reputation system
 
 
 ## Usage:
@@ -85,19 +83,19 @@ Auto-bundler create bundle for all `userOperation` from mempool every `autoBundl
 
 2. Change parameters in `./packages/bundler/localconfig/bundler.config.json`
 
-  - `network`: RPC to connect i.e. Arbitrum RPC
+  - `network`: RPC to connect i.e. Arbitrum RPC URL
 
   - `beneficiary`: wallet to receive gas reimbursement
 
-  - `minBalance`: minimum balance in bundler signer, if lower than this value, beneficiary will auto assign to bundler signer
+  - `minBalance`: minimum balance in bundler signer, if lower than this value, `beneficiary` will auto assign to bundler signer
 
   - `mnemonic`: mnemonic of bundler signer to execute AA transaction
 
   - `minStake`: Paymaster minimum stake in EntryPoint
 
-  - `minUnstakeDelay`: minimum time Paymaster stake locked in EntryPoint before able to unstake in seconds, Paymaster will be rejected if lower than this value
+  - `minUnstakeDelay`: minimum seconds Paymaster stake locked in EntryPoint before able to unstake, Paymaster will be rejected if lower than this value
 
-  - `autoBundleInterval`: interval seconds to execute all `userOperation`s in mempool
+  - `autoBundleInterval`: interval seconds to bundle at most `autoBundleMempoolSize` amount of `userOperation`s in mempool
 
   - `autoBundleMempoolSize`: maximum amount of `userOperation` per bundle
 
@@ -110,7 +108,7 @@ Debug: run debug mode with `DEBUG=* yarn run bundler`
 
 ## Other technical details
 
-TODO: everything else here
+*TODO: everything else here*
 
 ### Forbidden opcodes
 
@@ -121,15 +119,15 @@ https://eips.ethereum.org/EIPS/eip-4337#forbidden-opcodes
 
 This bundler currently not support signature aggregator
 
-## Mempool
+### Mempool
 
 How mempool work in bundler
 
-## Reputation
+### Reputation
 
 How reputation work in bundler
 
-## Safe and unsafe bundler
+### Safe and unsafe bundler
 
 Different between safe and unsafe bundler
 
