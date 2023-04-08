@@ -14,7 +14,7 @@ https://hackmd.io/@Vid201/aa-bundler-rust#ERC-4337-Account-Abstraction---Bundler
 
 ## Flow
 
-![bundler](https://user-images.githubusercontent.com/48756752/230726043-d31b2c1a-6288-4773-b1a8-316102947f8f.png)
+![bundler Medium](https://user-images.githubusercontent.com/48756752/230726201-6953f1f6-67a1-46ea-9dd6-0e24885069b2.png)
 
 ### RPC
 
