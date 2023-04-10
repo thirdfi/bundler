@@ -44,11 +44,12 @@ For parameter required and return value, refer [EIP4337 article](https://eips.et
 
 - simulate validate `userOperation` by Geth traceCall (or by EntryPoint if input `--unsafe` when run bundler)
 
-  - check if account/paymaster use forbidden opcodes if validate by traceCall
+  - check if `userOperation` is executable
+
+  - check if account/paymaster use forbidden opcodes or storage if validate by traceCall 
+  (refer [this](https://eips.ethereum.org/EIPS/eip-4337#specification-1) and [this](https://eips.ethereum.org/EIPS/eip-4337#forbidden-opcodes])
 
   - check if paymaster staked
-
-  - *(TODO: other checks)*
 
 - validate if signature is correct
 
@@ -91,6 +92,8 @@ Bundler signer sign and send bundle to EntryPoint. If bundle failed on-chain, se
 
   - `mnemonic`: mnemonic of bundler signer to execute AA transaction
 
+  - `maxBundleGas`: gas limit per bundle
+
   - `minStake`: Paymaster minimum stake in EntryPoint
 
   - `minUnstakeDelay`: minimum seconds Paymaster stake locked in EntryPoint before able to unstake, Paymaster will be rejected if lower than this value
@@ -106,14 +109,15 @@ Bundler signer sign and send bundle to EntryPoint. If bundle failed on-chain, se
 Debug: run debug mode with `DEBUG=* yarn run bundler`
 
 
-## Other technical details
-
-*TODO: everything else here*
+## Advanced technical details
 
 ### Forbidden opcodes
 
 Why forbidden opcodes?
-https://eips.ethereum.org/EIPS/eip-4337#forbidden-opcodes
+
+> These opcodes are forbidden because their outputs may differ between simulation and execution, so simulation of calls using these opcodes does not reliably tell what would happen if these calls are later done on-chain.
+
+Refer full paragraph [here](https://eips.ethereum.org/EIPS/eip-4337#forbidden-opcodes)
 
 ### Signature aggregator
 
@@ -121,14 +125,18 @@ This bundler currently not support signature aggregator
 
 ### Mempool
 
-How mempool work in bundler
+User send `userOperation` through bundler RPC. Bundler run some validation on `userOperation`, and only add it into mempool if the validation check passed. Then, bundler attempt to bundle all `userOperation`s that sit in mempool follow these criteria: every `autoBundleInterval` seconds or total `userOperation`s in mempool exceed `autoBundleMempoolSize`. When criteria met, bundler first remove previous `userOperation`s that had executed successfully on-chain, and record into reputation system (success + 1). Then follow by create a new bundle. In the process of bundle creation, if the `userOperation` use banned Factory or Paymaster contract, `userOperation` will be removed directly from mempool. Throttled Factory or Paymaster will not be included in bundle and keep in mempool until their reputation become better (as time goes by). `userOperation` with same AA wallet in bundle will also been skipped (which can be included in next bundle). After that, same validation check on `userOperation` again before finally add into bundler, and remove the `userOperation` from mempool if check failed. Other check including total gas used of `userOperation` in bundle cannot exceed `maxBundleGas` (skip subsequence `userOperation` if exceed), and Paymaster ETH balance that able to sponsor all `userOperation`s that rely on it in same bundle (skip subsequence `userOperation`s if exceed).
 
 ### Reputation
 
-How reputation work in bundler
+*TODO: explain in simple term*
+
+Refer full explanation [here](https://eips.ethereum.org/EIPS/eip-4337#reputation-scoring-and-throttlingbanning-for-global-entities)
 
 ### Safe and unsafe bundler
 
-Different between safe and unsafe bundler
+*TODO: different between safe and unsafe bundler*
 
-How preVerificationGas calculate
+Why need safe bundler? Some explanation [here](https://eips.ethereum.org/EIPS/eip-4337#rationale)
+
+TL:DR, to prevent success on validation but failed on execution.
